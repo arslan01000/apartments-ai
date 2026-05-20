@@ -1522,25 +1522,30 @@
             // Get lease length - default to 12 months if not specified
             const leaseMonths = apt.leaseLength || 12;
             
-            // Monthly costs
+            // Monthly costs - RESPECT the "Included" flags
             const monthlyRent = apt.rentAfterPromo || 0;
             const petRent = (apt.petRent || 0);
-            const utilities = (apt.electricity || 0) + (apt.water || 0) + (apt.gas || 0) + (apt.internet || 0);
-            const parking = apt.parking || 0;
+            const electricity = apt.electricityIncluded ? 0 : (apt.electricity || 0);
+            const water = apt.waterIncluded ? 0 : (apt.water || 0);
+            const gas = apt.gasIncluded ? 0 : (apt.gas || 0);
+            const internet = apt.internetIncluded ? 0 : (apt.internet || 0);
+            const parking = apt.parkingIncluded ? 0 : (apt.parking || 0);
             const apartmentFees = apt.apartmentFees || 0;
             
-            const totalMonthlyFees = monthlyRent + petRent + utilities + parking + apartmentFees;
+            const totalMonthlyFees = monthlyRent + petRent + electricity + water + gas + internet + parking + apartmentFees;
             
-            // One-time costs (spread across lease)
+            // One-time costs (spread across lease) - INCLUDE ALL fees
             const appFee = apt.appFee || 0;
             const adminFee = apt.adminFee || 0;
+            const deposit = apt.deposit || 0;
+            const petDeposit = apt.petDeposit || 0;
             const petFee = apt.petFee || 0;
             const otherFees = apt.otherFees || 0;
             
-            const totalOneTimeFees = appFee + adminFee + petFee + otherFees;
+            const totalOneTimeFees = appFee + adminFee + deposit + petDeposit + petFee + otherFees;
             const oneTimeFeesPerMonth = totalOneTimeFees / leaseMonths;
             
-            // Fair monthly cost
+            // Fair monthly cost = Monthly fees + One-time fees spread over lease
             const fairMonthlyCost = totalMonthlyFees + oneTimeFeesPerMonth;
             
             return Math.round(fairMonthlyCost);
@@ -1895,26 +1900,37 @@
         function editApartment(id) {
             const apt = app.apartments.find(a => a.id === id);
             if (!apt) return;
-            const form = document.getElementById('apartmentForm');
-            Object.keys(apt).forEach(key => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    if (input.type === 'checkbox') {
-                        input.checked = apt[key];
-                    } else if (input.tagName === 'TEXTAREA') {
-                        input.value = apt[key] || '';
-                    } else {
-                        input.value = apt[key] || '';
-                        if (input.type === 'range') {
-                            const valElement = document.getElementById(key + 'Val');
-                            if (valElement) valElement.textContent = apt[key];
+            app.editingId = id;
+            
+            // Don't reset form when editing - just navigate
+            app.currentView = 'add';
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[4].classList.add('active');
+            render();
+            
+            // Wait for form to render, then populate with longer timeout
+            setTimeout(() => {
+                const form = document.getElementById('apartmentForm');
+                if (!form) return;
+                Object.keys(apt).forEach(key => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = apt[key];
+                        } else if (input.tagName === 'TEXTAREA') {
+                            input.value = apt[key] || '';
+                        } else {
+                            input.value = apt[key] || '';
+                            if (input.type === 'range') {
+                                const valElement = document.getElementById(key + 'Val');
+                                if (valElement) valElement.textContent = apt[key];
+                            }
                         }
                     }
-                }
-            });
-            app.editingId = id;
-            document.querySelectorAll('.nav-item')[4].click();
-            updateCostBreakdown();
+                });
+                updateCostBreakdown();
+            }, 200);
+            
             window.scrollTo(0, 0);
         }
 
