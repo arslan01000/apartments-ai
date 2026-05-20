@@ -1028,6 +1028,35 @@
                                 <label>Deposit/Security Deposit</label>
                                 <input type="number" name="deposit" value="0" min="0">
                             </div>
+                            <div class="form-group">
+                                <label>Pet Deposit (one-time, refundable)</label>
+                                <input type="number" name="petDeposit" value="0" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Pet Fee (one-time, non-refundable)</label>
+                                <input type="number" name="petFee" value="0" min="0">
+                            </div>
+                        </div>
+                        <div style="margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <p style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Pet Restrictions</p>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="petRestrictions" name="petRestrictions">
+                                    <label for="petRestrictions">Has Pet Restrictions/Weight Limits</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="limitedBreeds" name="limitedBreeds">
+                                    <label for="limitedBreeds">Breed Restrictions</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="petLimitPerUnit" name="petLimitPerUnit">
+                                    <label for="petLimitPerUnit">Limit on # of Pets</label>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top: 1rem;">
+                                <label>Pet Restrictions Details (if any)</label>
+                                <input type="text" name="petRestrictionsDetails" placeholder="e.g., Max 2 pets, no dogs over 50lbs, no aggressive breeds">
+                            </div>
                         </div>
                     </div>
 
@@ -1499,10 +1528,10 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             Object.keys(data).forEach(key => {
-                if (['baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'].includes(key)) {
+                if (['baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
                 }
-                if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded'].includes(key)) {
+                if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit'].includes(key)) {
                     data[key] = data[key] === 'on';
                 }
             });
