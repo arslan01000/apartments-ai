@@ -976,7 +976,7 @@
                         <div class="cost-breakdown" id="costBreakdown">
                             <div class="cost-row">
                                 <span class="cost-label-text">Effective Rent</span>
-                                <span class="cost-amount">$0</span>
+                                <span class="cost-amount" id="effectiveRentDisplay">$0</span>
                             </div>
                             <div class="cost-row" id="electricityRow">
                                 <span class="cost-label-text">Electricity</span>
@@ -1290,6 +1290,10 @@
             const gasIncluded = form.querySelector('[name="gasIncluded"]')?.checked;
             const internetIncluded = form.querySelector('[name="internetIncluded"]')?.checked;
             const parkingIncluded = form.querySelector('[name="parkingIncluded"]')?.checked;
+
+            // Update Effective Rent display
+            const effectiveRentDisplay = document.getElementById('effectiveRentDisplay');
+            if (effectiveRentDisplay) effectiveRentDisplay.textContent = `$${rentAfterPromo}`;
 
             const breakdown = document.getElementById('costBreakdown');
             const rows = {
