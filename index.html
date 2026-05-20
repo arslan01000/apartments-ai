@@ -1044,6 +1044,10 @@
                                 <label>Pet Fee (one-time, non-refundable)</label>
                                 <input type="number" name="petFee" value="0" min="0">
                             </div>
+                            <div class="form-group">
+                                <label>Other One-Time Fees</label>
+                                <input type="number" name="otherFees" value="0" min="0" placeholder="e.g., device activation, processing, etc.">
+                            </div>
                         </div>
                         <div style="margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--border);">
                             <p style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Pet Restrictions</p>
@@ -1207,7 +1211,7 @@
                                 </div>
                                 <div class="checkbox-item">
                                     <input type="checkbox" id="skylounge" name="skylounge">
-                                    <label for="skylounge">Skylounge</label>
+                                    <label for="skylounge">Skylounge/Common Areas</label>
                                 </div>
                             </div>
                         </div>
@@ -1462,7 +1466,7 @@
         }
 
         function calculateMoveInCost(apt) {
-            return (apt.appFee || 0) + (apt.adminFee || 0) + (apt.deposit || 0);
+            return (apt.appFee || 0) + (apt.adminFee || 0) + (apt.deposit || 0) + (apt.petDeposit || 0) + (apt.petFee || 0) + (apt.otherFees || 0);
         }
 
         function render() {
@@ -1587,7 +1591,7 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             Object.keys(data).forEach(key => {
-                if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
+                if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
                 }
                 if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit', 'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'].includes(key)) {
@@ -1659,7 +1663,7 @@
                 app.apartments = JSON.parse(data);
                 // Convert all numeric fields from strings to numbers
                 app.apartments = app.apartments.map(apt => {
-                    const numericFields = ['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'];
+                    const numericFields = ['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'];
                     numericFields.forEach(field => {
                         if (apt[field] !== undefined) {
                             apt[field] = parseInt(apt[field]) || 0;
