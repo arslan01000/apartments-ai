@@ -856,6 +856,7 @@
                             <th>Address</th>
                             <th>Score</th>
                             <th>Monthly</th>
+                            <th>Fair Cost</th>
                             <th>Move-In</th>
                             <th>Avail</th>
                             <th>Actions</th>
@@ -898,6 +899,10 @@
                             <div class="form-group">
                                 <label>Bedrooms / Layout</label>
                                 <input type="text" name="layout" placeholder="e.g., 1BR/1BA, 2BR/2BA">
+                            </div>
+                            <div class="form-group">
+                                <label>Lease Length (Months)</label>
+                                <input type="number" name="leaseLength" value="12" min="1" step="1">
                             </div>
                             <div class="form-group">
                                 <label>Website/Floorplan Link</label>
@@ -1513,6 +1518,34 @@
             return Math.round(weightedScore * 10) / 10;
         }
 
+        function calculateFairMonthlyCost(apt) {
+            // Get lease length - default to 12 months if not specified
+            const leaseMonths = apt.leaseLength || 12;
+            
+            // Monthly costs
+            const monthlyRent = apt.rentAfterPromo || 0;
+            const petRent = (apt.petRent || 0);
+            const utilities = (apt.electricity || 0) + (apt.water || 0) + (apt.gas || 0) + (apt.internet || 0);
+            const parking = apt.parking || 0;
+            const apartmentFees = apt.apartmentFees || 0;
+            
+            const totalMonthlyFees = monthlyRent + petRent + utilities + parking + apartmentFees;
+            
+            // One-time costs (spread across lease)
+            const appFee = apt.appFee || 0;
+            const adminFee = apt.adminFee || 0;
+            const petFee = apt.petFee || 0;
+            const otherFees = apt.otherFees || 0;
+            
+            const totalOneTimeFees = appFee + adminFee + petFee + otherFees;
+            const oneTimeFeesPerMonth = totalOneTimeFees / leaseMonths;
+            
+            // Fair monthly cost
+            const fairMonthlyCost = totalMonthlyFees + oneTimeFeesPerMonth;
+            
+            return Math.round(fairMonthlyCost);
+        }
+
         function calculateMonthlyCost(apt) {
             let total = (apt.rentAfterPromo || 0);
             
@@ -1556,13 +1589,15 @@
 
             const top = sorted[0];
             const lowest = sorted.reduce((min, apt) => calculateMonthlyCost(apt) < calculateMonthlyCost(min) ? apt : min);
+            const fairLowest = sorted.reduce((min, apt) => calculateFairMonthlyCost(apt) < calculateFairMonthlyCost(min) ? apt : min);
             const fewestFlags = sorted.reduce((min, apt) => (apt.redFlags || '').split(',').filter(f => f.trim()).length < (min.redFlags || '').split(',').filter(f => f.trim()).length ? apt : min);
 
             grid.innerHTML = `
                 <div class="summary-card"><div class="summary-label">🏆 Best Option</div><div class="summary-value">${top.score}</div><div class="summary-subtitle">${top.name}</div></div>
                 <div class="summary-card"><div class="summary-label">💰 Lowest Cost</div><div class="summary-value">$${calculateMonthlyCost(lowest)}</div><div class="summary-subtitle">${lowest.name}</div></div>
+                <div class="summary-card"><div class="summary-label">📊 Best Fair Cost</div><div class="summary-value">$${Math.min(...sorted.map(apt => calculateFairMonthlyCost(apt)))}</div><div class="summary-subtitle">${sorted.find(apt => calculateFairMonthlyCost(apt) === Math.min(...sorted.map(a => calculateFairMonthlyCost(a)))).name}</div></div>
+                <div class="summary-card"><div class="summary-label">⚖️ Fair Monthly Cost</div><div class="summary-value">$${calculateFairMonthlyCost(fairLowest)}</div><div class="summary-subtitle">${fairLowest.name}</div></div>
                 <div class="summary-card"><div class="summary-label">⚠️ Fewest Red Flags</div><div class="summary-value">${(fewestFlags.redFlags || '').split(',').filter(f => f.trim()).length}</div><div class="summary-subtitle">${fewestFlags.name}</div></div>
-                <div class="summary-card"><div class="summary-label">📊 Average Score</div><div class="summary-value">${(sorted.reduce((sum, apt) => sum + apt.score, 0) / sorted.length).toFixed(1)}</div><div class="summary-subtitle">All apartments</div></div>
             `;
 
             list.innerHTML = sorted.map((apt, idx) => `
@@ -1577,6 +1612,7 @@
                     <div class="apartment-cost">
                         <div class="cost-item"><span class="cost-label">Rent</span><span class="cost-value">$${apt.rentAfterPromo}</span></div>
                         <div class="cost-item"><span class="cost-label">Total/mo</span><span class="cost-value">$${calculateMonthlyCost(apt)}</span></div>
+                        <div class="cost-item"><span class="cost-label">Fair Cost/mo</span><span class="cost-value">$${calculateFairMonthlyCost(apt)}</span></div>
                         <div class="cost-total"><div class="cost-item"><span class="cost-label">Move-In Est.</span><span class="cost-value">$${calculateMoveInCost(apt)}</span></div></div>
                     </div>
                     <div class="metrics-grid">
@@ -1622,6 +1658,7 @@
                     <td>${apt.address || '-'}</td>
                     <td><strong style="color: var(--primary);">${apt.score}</strong></td>
                     <td>$${calculateMonthlyCost(apt)}</td>
+                    <td>$${calculateFairMonthlyCost(apt)}</td>
                     <td>$${calculateMoveInCost(apt)}</td>
                     <td>${apt.availabilityDate || '-'}</td>
                     <td><button onclick="editApartment(${apt.id})" style="margin-right: 0.5rem;">Edit</button><button onclick="deleteApartment(${apt.id})" style="color: var(--danger);">Delete</button></td>
@@ -1665,7 +1702,7 @@
             
             // Convert numeric fields
             Object.keys(data).forEach(key => {
-                if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
+                if (['sqft', 'leaseLength', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
                 }
                 if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit', 'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'].includes(key)) {
@@ -1718,6 +1755,8 @@
                             <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.125rem;">💰 Costs</h3>
                             <p><strong>Rent After Promo:</strong> $${apt.rentAfterPromo}</p>
                             <p><strong>Monthly Total:</strong> $${monthly}</p>
+                            <p><strong>Fair Monthly Cost:</strong> $${calculateFairMonthlyCost(apt)}</p>
+                            <p><strong>Lease Length:</strong> ${apt.leaseLength || 12} months</p>
                             <p><strong>Move-In Est:</strong> $${moveIn}</p>
                             <p><strong>Score:</strong> <span style="color: var(--primary); font-weight: 700; font-size: 1.25rem;">${score}</span></p>
                         </div>
@@ -1854,7 +1893,7 @@
                 app.apartments = JSON.parse(data);
                 // Convert all numeric fields from strings to numbers
                 app.apartments = app.apartments.map(apt => {
-                    const numericFields = ['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'];
+                    const numericFields = ['sqft', 'leaseLength', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'];
                     numericFields.forEach(field => {
                         if (apt[field] !== undefined) {
                             apt[field] = parseInt(apt[field]) || 0;
