@@ -1703,7 +1703,7 @@
             const moveIn = calculateMoveInCost(apt);
             
             let detailsHtml = `
-                <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; max-width: 900px; margin: 0 auto;">
+                <div style="max-width: 900px; margin: 0 auto;">
                     <h2 style="font-size: 2rem; margin-bottom: 2rem; color: var(--primary);">${apt.name}</h2>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
@@ -1738,6 +1738,9 @@
                             <p><strong>Amenities:</strong> ${apt.amenities || 5}/10</p>
                             <p><strong>Management:</strong> ${apt.management || 5}/10</p>
                             <p><strong>Neighborhood:</strong> ${apt.neighborhood || 5}/10</p>
+                            <p><strong>Cleanliness:</strong> ${apt.cleanliness || 5}/10</p>
+                            <p><strong>Overall Vibe:</strong> ${apt.overallVibe || 5}/10</p>
+                            <p><strong>Gym/Fitness:</strong> ${apt.gym || 0}/10</p>
                         </div>
                     </div>
 
@@ -1745,6 +1748,31 @@
                         <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🚗 Commute</h3>
                         <p><strong>To My Work:</strong> ${apt.commuteMyWork || 0} min</p>
                         <p><strong>To GF's Work:</strong> ${apt.commuteGFWork || 0} min</p>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🏠 Tour Notes</h3>
+                        <p><strong>Smell:</strong> ${apt.smell || '-'}</p>
+                        <p><strong>Hallway:</strong> ${apt.hallwayCondition || '-'}</p>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🏊 Amenities</h3>
+                        <p>${apt.concierge ? '✅ Concierge/Front Desk' : '❌ No Concierge'}</p>
+                        <p>${apt.dogPark ? '✅ Dog Park' : '❌ No Dog Park'}</p>
+                        <p>${apt.pool ? '✅ Pool' : '❌ No Pool'}</p>
+                        <p>${apt.coffeeShop ? '✅ Coffee Shop/Bar' : '❌ No Coffee Shop'}</p>
+                        <p>${apt.skylounge ? '✅ Skylounge' : '❌ No Skylounge'}</p>
+                        <p><strong>Dog Grooming:</strong> ${apt.dogGrooming || 'N/A'}</p>
+                        <p><strong>Yoga:</strong> ${apt.yoga || 'N/A'}</p>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🐕 Pet Info</h3>
+                        <p><strong>Pet Rent:</strong> $${apt.petRent || 0}/month</p>
+                        <p><strong>Pet Deposit:</strong> $${apt.petDeposit || 0}</p>
+                        <p><strong>Pet Fee:</strong> $${apt.petFee || 0}</p>
+                        ${apt.petRestrictionsDetails ? `<p><strong>Details:</strong> ${apt.petRestrictionsDetails}</p>` : ''}
                     </div>
             `;
             
@@ -1762,15 +1790,22 @@
             }
 
             detailsHtml += `
-                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; text-align: center;">
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; text-align: center; display: flex; gap: 1rem; justify-content: center;">
                         <button class="btn btn-primary" onclick="editApartment(${apt.id})">✏️ Edit</button>
-                        <button class="btn" onclick="document.querySelectorAll('.nav-item')[0].click()" style="margin-left: 1rem;">← Back</button>
+                        <button class="btn" onclick="showDashboard()">← Back to Dashboard</button>
                     </div>
                 </div>
             `;
             
             const main = document.querySelector('main');
-            main.innerHTML = detailsHtml;
+            main.innerHTML = `<div style="padding: 2rem;">${detailsHtml}</div>`;
+        }
+        
+        function showDashboard() {
+            app.currentView = 'dashboard';
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            render();
         }
 
         function editApartment(id) {
