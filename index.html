@@ -1185,7 +1185,58 @@
                     </div>
 
                     <div class="form-section">
-                        <h3>✅ Approval Details</h3>
+                        <h3>🏊 Amenities & Features</h3>
+                        <div style="margin-bottom: 1.5rem;">
+                            <p style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Available Amenities</p>
+                            <div class="checkbox-group">
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="concierge" name="concierge">
+                                    <label for="concierge">Concierge/Front Desk</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="dogPark" name="dogPark">
+                                    <label for="dogPark">Dog Park</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="pool" name="pool">
+                                    <label for="pool">Pool</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="coffeeShop" name="coffeeShop">
+                                    <label for="coffeeShop">Coffee Shop/Bar</label>
+                                </div>
+                                <div class="checkbox-item">
+                                    <input type="checkbox" id="skylounge" name="skylounge">
+                                    <label for="skylounge">Skylounge/Common Areas</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Dog Grooming</label>
+                                <select name="dogGrooming">
+                                    <option value="">Not Available</option>
+                                    <option value="free">Free</option>
+                                    <option value="paid">Paid</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Gym/Fitness (1-10)</label>
+                                <input type="range" name="gym" min="0" max="10" value="0" class="rating-slider">
+                                <div class="rating-value"><span>None</span><span id="gymVal">0</span><span>Premium</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Yoga Room/Classes</label>
+                                <select name="yoga">
+                                    <option value="">Not Available</option>
+                                    <option value="room">Yoga Room</option>
+                                    <option value="classes">Classes Offered</option>
+                                    <option value="both">Room & Classes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Accepts Bank Statements?</label>
@@ -1536,10 +1587,10 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             Object.keys(data).forEach(key => {
-                if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'].includes(key)) {
+                if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
                 }
-                if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit'].includes(key)) {
+                if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit', 'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'].includes(key)) {
                     data[key] = data[key] === 'on';
                 }
             });
@@ -1608,7 +1659,7 @@
                 app.apartments = JSON.parse(data);
                 // Convert all numeric fields from strings to numbers
                 app.apartments = app.apartments.map(apt => {
-                    const numericFields = ['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'];
+                    const numericFields = ['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'];
                     numericFields.forEach(field => {
                         if (apt[field] !== undefined) {
                             apt[field] = parseInt(apt[field]) || 0;
