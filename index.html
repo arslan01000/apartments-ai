@@ -1628,8 +1628,10 @@
                 if (input) {
                     if (input.type === 'checkbox') {
                         input.checked = apt[key];
+                    } else if (input.tagName === 'TEXTAREA') {
+                        input.value = apt[key] || '';
                     } else {
-                        input.value = apt[key];
+                        input.value = apt[key] || '';
                         if (input.type === 'range') {
                             const valElement = document.getElementById(key + 'Val');
                             if (valElement) valElement.textContent = apt[key];
