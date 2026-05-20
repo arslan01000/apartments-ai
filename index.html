@@ -1750,6 +1750,7 @@
                             <p><strong>Layout:</strong> ${apt.layout || '-'}</p>
                             <p><strong>Sq Ft:</strong> ${apt.sqft || '-'}</p>
                             <p><strong>Available:</strong> ${apt.availabilityDate || '-'}</p>
+                            ${apt.website ? `<p><strong>Website:</strong> <a href="${apt.website}" target="_blank" style="color: var(--primary);">View Listing</a></p>` : ''}
                         </div>
                         <div>
                             <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.125rem;">💰 Costs</h3>
@@ -1790,9 +1791,53 @@
                     </div>
 
                     <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
-                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🏠 Tour Notes</h3>
-                        <p><strong>Smell:</strong> ${apt.smell || '-'}</p>
-                        <p><strong>Hallway:</strong> ${apt.hallwayCondition || '-'}</p>
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🏠 Move-In Cost Breakdown</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.95rem;">
+                            <p><strong>App Fee:</strong> $${apt.appFee || 0}</p>
+                            <p><strong>Admin Fee:</strong> $${apt.adminFee || 0}</p>
+                            <p><strong>Deposit:</strong> $${apt.deposit || 0}</p>
+                            <p><strong>Pet Deposit:</strong> $${apt.petDeposit || 0}</p>
+                            <p><strong>Pet Fee:</strong> $${apt.petFee || 0}</p>
+                            <p><strong>Other Fees:</strong> $${apt.otherFees || 0}</p>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <p style="font-weight: 700; color: var(--primary); font-size: 1.1rem;"><strong>Total Move-In:</strong> $${moveIn}</p>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">💳 Monthly Cost Breakdown</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.95rem;">
+                            <p><strong>Rent:</strong> $${apt.rentAfterPromo || 0}</p>
+                            <p><strong>Electricity:</strong> $${apt.electricity || 0} ${apt.electricityIncluded ? '(Included)' : ''}</p>
+                            <p><strong>Water:</strong> $${apt.water || 0} ${apt.waterIncluded ? '(Included)' : ''}</p>
+                            <p><strong>Gas:</strong> $${apt.gas || 0} ${apt.gasIncluded ? '(Included)' : ''}</p>
+                            <p><strong>Internet:</strong> $${apt.internet || 0} ${apt.internetIncluded ? '(Included)' : ''}</p>
+                            <p><strong>Parking:</strong> $${apt.parking || 0} ${apt.parkingIncluded ? '(Included)' : ''}</p>
+                            <p><strong>Pet Rent:</strong> $${apt.petRent || 0}</p>
+                            <p><strong>Apartment Fees:</strong> $${apt.apartmentFees || 0}</p>
+                        </div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                            <p style="font-weight: 700; color: var(--primary); font-size: 1.1rem;"><strong>Total Monthly:</strong> $${monthly}</p>
+                            <p style="font-weight: 700; color: var(--primary); font-size: 1.1rem;"><strong>Fair Monthly Cost (${apt.leaseLength || 12}mo lease):</strong> $${calculateFairMonthlyCost(apt)}</p>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🐕 Pet Restrictions</h3>
+                        <p><strong>Weight Limits:</strong> ${apt.petRestrictions ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Breed Restrictions:</strong> ${apt.limitedBreeds ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Pet Limit:</strong> ${apt.petLimitPerUnit ? '✅ Limited' : '❌ No Limit'}</p>
+                        ${apt.petRestrictionsDetails ? `<p><strong>Details:</strong> ${apt.petRestrictionsDetails}</p>` : ''}
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">✅ Approval Details</h3>
+                        <p><strong>Accepts Bank Statements:</strong> ${apt.acceptsBankStatements ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Accepts Scholarship Docs:</strong> ${apt.acceptsScholarshipDocs ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Requires Paystubs:</strong> ${apt.requiresPaystubs ? '⚠️ Yes' : '✅ No'}</p>
+                        ${apt.approvalDifficulty ? `<p><strong>Approval Difficulty:</strong> ${apt.approvalDifficulty}</p>` : ''}
+                        ${apt.approvalStatus ? `<p><strong>Status:</strong> ${apt.approvalStatus}</p>` : ''}
                     </div>
 
                     <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
