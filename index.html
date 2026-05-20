@@ -1901,17 +1901,19 @@
             const apt = app.apartments.find(a => a.id === id);
             if (!apt) return;
             app.editingId = id;
-            
-            // Don't reset form when editing - just navigate
             app.currentView = 'add';
+            
+            // Switch to Add Apartment view
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.nav-item')[4].classList.add('active');
-            render();
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.view')[4].classList.add('active');
             
-            // Wait for form to render, then populate with longer timeout
+            // Wait a bit for form to be visible, then populate
             setTimeout(() => {
                 const form = document.getElementById('apartmentForm');
                 if (!form) return;
+                
                 Object.keys(apt).forEach(key => {
                     const input = form.querySelector(`[name="${key}"]`);
                     if (input) {
@@ -1929,7 +1931,7 @@
                     }
                 });
                 updateCostBreakdown();
-            }, 200);
+            }, 100);
             
             window.scrollTo(0, 0);
         }
