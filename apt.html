@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApartmentIQ - Smart Apartment Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f1419;
+            --bg-secondary: #1a1f2e;
+            --bg-tertiary: #252d3d;
+            --surface: #1f2937;
+            --surface-hover: #2d3748;
+            --border: #374151;
+            --text-primary: #f3f4f6;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --primary-light: #dbeafe;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(180deg, var(--surface) 0%, rgba(31, 41, 55, 0.5) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .header-left h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-left p {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            border: none;
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-icon {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            padding: 0 2rem;
+            overflow-x: auto;
+            position: sticky;
+            top: 4.5rem;
+            z-index: 50;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        main {
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+            width: 100%;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--surface-hover) 0%, var(--bg-tertiary) 100%);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .summary-card:hover::before {
+            opacity: 1;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .summary-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .apartments-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .apartment-card {
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .apartment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .apartment-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .apartment-card:hover::before {
+            opacity: 1;
+        }
+
+        .apartment-card.top-pick {
+            border: 2px solid var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-tertiary) 100%);
+        }
+
+        .apartment-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+        }
+
+        .apartment-info h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .apartment-address {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .apartment-badge {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .apartment-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: right;
+            line-height: 1;
+        }
+
+        .apartment-cost {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cost-label {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .cost-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .cost-total {
+            grid-column: 1 / -1;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .metric:hover {
+            border-color: var(--primary);
+            background: var(--surface-hover);
+        }
+
+        .metric-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .metric-content {
+            min-width: 0;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .red-flags {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger);
+            padding: 0.875rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .red-flags strong {
+            color: var(--danger);
+        }
+
+        .apartment-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .apartment-actions button {
+            flex: 1;
+            padding: 0.625rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .apartment-actions button:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            background: var(--surface);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-secondary);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            color: var(--text-secondary);
+        }
+
+        tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .compare-card {
+            background: linear-gradient(135deg, var(--surface) 0%, var(--bg-tertiary) 100%);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+        }
+
+        .compare-card.winner {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, var(--bg-tertiary) 100%);
+        }
+
+        .compare-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .compare-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .compare-row:last-child {
+            border-bottom: none;
+        }
+
+        .compare-label {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .compare-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+
+        footer {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .apartments-container {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 1.5rem 1rem;
+            }
+
+            .nav {
+                padding: 0 1rem;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .apartment-cost {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-left h1 {
+                font-size: 1.5rem;
+            }
+
+            .apartment-score {
+                font-size: 2rem;
+            }
+
+            .summary-value {
+                font-size: 1.75rem;
+            }
+
+            .nav-item {
+                padding: 0.75rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>🏠 ApartmentIQ</h1>
+                <p>Make data-driven decisions</p>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-icon" id="darkModeBtn" title="Toggle dark mode">🌙</button>
+                <button class="btn" id="exportBtn">⬇️ Export</button>
+                <label class="btn" style="cursor: pointer;">⬆️ Import
+                    <input type="file" id="importBtn" accept=".json" style="display: none;">
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">Dashboard</button>
+        <button class="nav-item" data-view="leaderboard">Leaderboard</button>
+        <button class="nav-item" data-view="table">Table View</button>
+        <button class="nav-item" data-view="compare">Compare</button>
+        <button class="nav-item" data-view="add">Add Apartment</button>
+    </nav>
+
+    <main>
+        <div class="view active" id="dashboard">
+            <div class="summary-grid" id="summaryGrid"></div>
+            <div id="apartmentsList"></div>
+        </div>
+
+        <div class="view" id="leaderboard">
+            <div class="apartments-container" id="leaderboardList"></div>
+        </div>
+
+        <div class="view" id="table">
+            <div class="table-container">
+                <table id="apartmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Apartment</th>
+                            <th>Address</th>
+                            <th>Score</th>
+                            <th>Monthly</th>
+                            <th>Move-In</th>
+                            <th>Avail</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="view" id="compare">
+            <div style="margin-bottom: 2rem;">
+                <label style="color: var(--text-secondary);">
+                    <select id="compareSelect" style="background: var(--surface); color: var(--text-primary); border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.95rem;">
+                        <option>Select apartments to compare</option>
+                    </select>
+                </label>
+            </div>
+            <div class="compare-grid" id="compareGrid"></div>
+        </div>
+
+        <div class="view" id="add">
+            <div class="form-container">
+                <form id="apartmentForm">
+                    <div class="form-section">
+                        <h3>📍 Basic Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Apartment Name</label>
+                                <input type="text" name="name" placeholder="e.g., Reverie at River Hollow" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Address/Location</label>
+                                <input type="text" name="address" placeholder="Full address">
+                            </div>
+                            <div class="form-group">
+                                <label>Website/Floorplan Link</label>
+                                <input type="url" name="website" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label>Availability Date</label>
+                                <input type="date" name="availabilityDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>💰 Monthly Costs</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Base Rent</label>
+                                <input type="number" name="rent" value="1000" min="0" step="50">
+                            </div>
+                            <div class="form-group">
+                                <label>Promo/Discount</label>
+                                <input type="number" name="promo" value="0" min="0" step="50">
+                            </div>
+                            <div class="form-group">
+                                <label>Rent After Promo</label>
+                                <input type="number" name="rentAfterPromo" value="1000" min="0" step="50">
+                            </div>
+                            <div class="form-group">
+                                <label>Utilities Est.</label>
+                                <input type="number" name="utilities" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Parking</label>
+                                <input type="number" name="parking" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Internet</label>
+                                <input type="number" name="internet" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Valet Trash</label>
+                                <input type="number" name="valetTrash" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Pest Control</label>
+                                <input type="number" name="pestControl" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Package Fee</label>
+                                <input type="number" name="packageFee" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Pet Rent (per dog)</label>
+                                <input type="number" name="petRent" value="0" min="0" step="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🏠 Move-In Costs</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Application Fee</label>
+                                <input type="number" name="appFee" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Admin Fee</label>
+                                <input type="number" name="adminFee" value="0" min="0" step="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Deposit/Security Deposit</label>
+                                <input type="number" name="deposit" value="0" min="0" step="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🚗 Commute</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Commute to My Work (min)</label>
+                                <input type="number" name="commuteMyWork" value="15" min="0" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Commute to Girlfriend's Work (min)</label>
+                                <input type="number" name="commuteGFWork" value="15" min="0" step="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>⭐ Ratings (1-10)</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Safety</label>
+                                <input type="range" name="safety" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Poor</span><span id="safetyVal">5</span><span>Excellent</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Noise Level (lower = quieter)</label>
+                                <input type="range" name="noise" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Loud</span><span id="noiseVal">5</span><span>Quiet</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Walkability</label>
+                                <input type="range" name="walkability" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Car-Dependent</span><span id="walkabilityVal">5</span><span>Very Walkable</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Natural Light</label>
+                                <input type="range" name="naturalLight" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Dark</span><span id="naturalLightVal">5</span><span>Very Bright</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Kitchen Quality</label>
+                                <input type="range" name="kitchenQuality" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Basic</span><span id="kitchenQualityVal">5</span><span>Premium</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Spaciousness</label>
+                                <input type="range" name="spaciousness" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Cramped</span><span id="spaciousnessVal">5</span><span>Very Spacious</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Balcony/Patio Quality</label>
+                                <input type="range" name="balconyQuality" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>None/Small</span><span id="balconyQualityVal">5</span><span>Large/Premium</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Study/Work Area</label>
+                                <input type="range" name="studyArea" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>None</span><span id="studyAreaVal">5</span><span>Dedicated</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Furniture/Finish Quality</label>
+                                <input type="range" name="finishQuality" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Basic</span><span id="finishQualityVal">5</span><span>Premium</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Amenities</label>
+                                <input type="range" name="amenities" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Minimal</span><span id="amenitiesVal">5</span><span>Extensive</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Management/Staff Quality</label>
+                                <input type="range" name="management" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Poor</span><span id="managementVal">5</span><span>Excellent</span></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Neighborhood Feel</label>
+                                <input type="range" name="neighborhood" min="1" max="10" value="5" class="rating-slider">
+                                <div class="rating-value"><span>Unfriendly</span><span id="neighborhoodVal">5</span><span>Very Friendly</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>📝 Tour Notes</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Smell</label>
+                                <input type="text" name="smell" placeholder="Fresh, musty, pleasant, etc.">
+                            </div>
+                            <div class="form-group">
+                                <label>Hallway Condition</label>
+                                <input type="text" name="hallwayCondition" placeholder="Clean, dated, well-lit, etc.">
+                            </div>
+                            <div class="form-group">
+                                <label>Overall Cleanliness (1-10)</label>
+                                <input type="number" name="cleanliness" min="1" max="10" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label>Overall Vibe (1-10)</label>
+                                <input type="number" name="overallVibe" min="1" max="10" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🎯 Personal Scores</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Would I Enjoy Living Here? (1-10)</label>
+                                <input type="number" name="enjoyScore" min="1" max="10" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label>Would I Regret NOT Choosing This? (1-10)</label>
+                                <input type="number" name="regretScore" min="1" max="10" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>✅ Approval Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Accepts Bank Statements?</label>
+                                <select name="acceptsBankStatements">
+                                    <option value="">Unknown</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Accepts Scholarship Docs?</label>
+                                <select name="acceptsScholarship">
+                                    <option value="">Unknown</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Requires Paystubs?</label>
+                                <select name="requiresPaystubs">
+                                    <option value="">Unknown</option>
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Approval Difficulty</label>
+                                <select name="approvalDifficulty">
+                                    <option value="">Unknown</option>
+                                    <option value="easy">Easy</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="difficult">Difficult</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Approval Status</label>
+                                <select name="approvalStatus">
+                                    <option value="">Unknown</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="notApplied">Not Applied</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>👍 Pros & Cons</h3>
+                        <div class="form-grid">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Main Pros (comma separated)</label>
+                                <input type="text" name="pros" placeholder="Great walkability, modern finishes, friendly staff">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Main Cons (comma separated)</label>
+                                <input type="text" name="cons" placeholder="Expensive, small balcony, far from girlfriend's work">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Red Flags Observed</label>
+                                <textarea name="redFlags" placeholder="Thin walls, roaches, poor maintenance, hidden fees, etc."></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>General Notes</label>
+                                <textarea name="notes" placeholder="Any other observations..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; border: none;">Save Apartment</button>
+                        <button type="button" class="btn" id="resetBtn" style="flex: 1;">Clear Form</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>All data saved locally. Export regularly to back up. No account needed. Privacy first.</p>
+    </footer>
+
+    <script>
+        const app = {
+            apartments: [],
+            weights: { safety: 15, noise: 15, commute: 20, walkability: 20, price: 20, amenities: 10 },
+            currentView: 'dashboard',
+            editingId: null,
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            setupEventListeners();
+            render();
+        });
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const view = e.target.dataset.view;
+                    app.currentView = view;
+                    showView(view);
+                    render();
+                });
+            });
+
+            document.getElementById('apartmentForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('resetBtn').addEventListener('click', resetForm);
+
+            document.querySelectorAll('.rating-slider').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const name = e.target.name + 'Val';
+                    const valElement = document.getElementById(name);
+                    if (valElement) valElement.textContent = e.target.value;
+                });
+            });
+
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('importBtn').addEventListener('change', importData);
+            document.getElementById('darkModeBtn').addEventListener('click', toggleDarkMode);
+        }
+
+        function showView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(view).classList.add('active');
+        }
+
+        function calculateScore(apt) {
+            const monthlyTotal = apt.rentAfterPromo + (apt.utilities || 0) + (apt.parking || 0) + 
+                               (apt.internet || 0) + (apt.valetTrash || 0) + (apt.pestControl || 0) + 
+                               (apt.packageFee || 0) + (apt.petRent || 0) * 2;
+
+            const ratings = [
+                apt.safety || 5, apt.noise || 5, apt.walkability || 5, apt.naturalLight || 5,
+                apt.kitchenQuality || 5, apt.spaciousness || 5, apt.balconyQuality || 5,
+                apt.studyArea || 5, apt.finishQuality || 5, apt.amenities || 5,
+                apt.management || 5, apt.neighborhood || 5,
+            ];
+
+            const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+            const priceScore = Math.max(1, 10 - monthlyTotal / 200);
+            const commuteScore = Math.max(1, 10 - ((apt.commuteMyWork || 20) + (apt.commuteGFWork || 20)) / 10);
+
+            const weightedScore = (avgRating * 60 + priceScore * 20 + commuteScore * 20) / 100;
+            return Math.round(weightedScore * 10) / 10;
+        }
+
+        function calculateMonthlyCost(apt) {
+            return (apt.rentAfterPromo || 0) + (apt.utilities || 0) + (apt.parking || 0) + 
+                   (apt.internet || 0) + (apt.valetTrash || 0) + (apt.pestControl || 0) + 
+                   (apt.packageFee || 0) + ((apt.petRent || 0) * 2);
+        }
+
+        function calculateMoveInCost(apt) {
+            return (apt.appFee || 0) + (apt.adminFee || 0) + (apt.deposit || 0);
+        }
+
+        function render() {
+            const sorted = app.apartments
+                .map(apt => ({ ...apt, score: calculateScore(apt) }))
+                .sort((a, b) => b.score - a.score);
+
+            switch (app.currentView) {
+                case 'dashboard': renderDashboard(sorted); break;
+                case 'leaderboard': renderLeaderboard(sorted); break;
+                case 'table': renderTable(sorted); break;
+                case 'compare': renderCompare(sorted); break;
+            }
+        }
+
+        function renderDashboard(sorted) {
+            const grid = document.getElementById('summaryGrid');
+            const list = document.getElementById('apartmentsList');
+
+            if (sorted.length === 0) {
+                grid.innerHTML = '';
+                list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🏠</div><h3>No apartments yet</h3><p>Start by adding your first apartment</p><button class="btn btn-primary" onclick="document.querySelectorAll('.nav-item')[4].click()">+ Add Apartment</button></div>`;
+                return;
+            }
+
+            const top = sorted[0];
+            const lowest = sorted.reduce((min, apt) => calculateMonthlyCost(apt) < calculateMonthlyCost(min) ? apt : min);
+            const fewestFlags = sorted.reduce((min, apt) => (apt.redFlags || '').split(',').filter(f => f.trim()).length < (min.redFlags || '').split(',').filter(f => f.trim()).length ? apt : min);
+
+            grid.innerHTML = `
+                <div class="summary-card"><div class="summary-label">🏆 Best Option</div><div class="summary-value">${top.score}</div><div class="summary-subtitle">${top.name}</div></div>
+                <div class="summary-card"><div class="summary-label">💰 Lowest Cost</div><div class="summary-value">$${calculateMonthlyCost(lowest)}</div><div class="summary-subtitle">${lowest.name}</div></div>
+                <div class="summary-card"><div class="summary-label">⚠️ Fewest Red Flags</div><div class="summary-value">${(fewestFlags.redFlags || '').split(',').filter(f => f.trim()).length}</div><div class="summary-subtitle">${fewestFlags.name}</div></div>
+                <div class="summary-card"><div class="summary-label">📊 Average Score</div><div class="summary-value">${(sorted.reduce((sum, apt) => sum + apt.score, 0) / sorted.length).toFixed(1)}</div><div class="summary-subtitle">All apartments</div></div>
+            `;
+
+            list.innerHTML = sorted.map((apt, idx) => `
+                <div class="apartment-card ${idx === 0 ? 'top-pick' : ''}">
+                    <div class="apartment-header">
+                        <div class="apartment-info">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;"><h3>${apt.name}</h3>${idx === 0 ? '<div class="apartment-badge">Top Pick</div>' : ''}</div>
+                            ${apt.address ? `<div class="apartment-address">${apt.address}</div>` : ''}
+                        </div>
+                        <div class="apartment-score">#${idx + 1}<br>${apt.score}</div>
+                    </div>
+                    <div class="apartment-cost">
+                        <div class="cost-item"><span class="cost-label">Rent</span><span class="cost-value">$${apt.rentAfterPromo}</span></div>
+                        <div class="cost-item"><span class="cost-label">Total/mo</span><span class="cost-value">$${calculateMonthlyCost(apt)}</span></div>
+                        <div class="cost-total"><div class="cost-item"><span class="cost-label">Move-In Est.</span><span class="cost-value">$${calculateMoveInCost(apt)}</span></div></div>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric"><div class="metric-icon">🏘️</div><div class="metric-content"><div class="metric-label">Safety</div><div class="metric-value">${apt.safety || 5}/10</div></div></div>
+                        <div class="metric"><div class="metric-icon">🚶</div><div class="metric-content"><div class="metric-label">Walk</div><div class="metric-value">${apt.walkability || 5}/10</div></div></div>
+                        <div class="metric"><div class="metric-icon">🔇</div><div class="metric-content"><div class="metric-label">Quiet</div><div class="metric-value">${apt.noise || 5}/10</div></div></div>
+                        <div class="metric"><div class="metric-icon">🚗</div><div class="metric-content"><div class="metric-label">My Commute</div><div class="metric-value">${apt.commuteMyWork || 0}m</div></div></div>
+                    </div>
+                    ${apt.redFlags ? `<div class="red-flags"><strong>⚠️ Red Flags:</strong> ${apt.redFlags}</div>` : ''}
+                    <div class="apartment-actions"><button onclick="editApartment(${apt.id})">✏️ Edit</button><button onclick="deleteApartment(${apt.id})">🗑️ Delete</button></div>
+                </div>
+            `).join('');
+        }
+
+        function renderLeaderboard(sorted) {
+            const container = document.getElementById('leaderboardList');
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><h3>No data yet</h3></div>';
+                return;
+            }
+            container.innerHTML = sorted.map((apt, idx) => `
+                <div class="apartment-card">
+                    <div style="text-align: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                        <div style="display: inline-block; background: linear-gradient(135deg, var(--primary), #2563eb); color: white; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem; margin-bottom: 1rem;">#${idx + 1}</div>
+                        <h3>${apt.name}</h3>
+                        <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary); margin: 0.75rem 0;">${apt.score}</div>
+                        <div style="color: var(--text-tertiary); font-size: 0.875rem;">$${calculateMonthlyCost(apt)}/month</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTable(sorted) {
+            const tbody = document.getElementById('tableBody');
+            if (sorted.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 3rem;">No apartments to display</td></tr>';
+                return;
+            }
+            tbody.innerHTML = sorted.map((apt, idx) => `
+                <tr>
+                    <td>#${idx + 1}</td>
+                    <td><strong>${apt.name}</strong></td>
+                    <td>${apt.address || '-'}</td>
+                    <td><strong style="color: var(--primary);">${apt.score}</strong></td>
+                    <td>$${calculateMonthlyCost(apt)}</td>
+                    <td>$${calculateMoveInCost(apt)}</td>
+                    <td>${apt.availabilityDate || '-'}</td>
+                    <td><button onclick="editApartment(${apt.id})" style="margin-right: 0.5rem;">Edit</button><button onclick="deleteApartment(${apt.id})" style="color: var(--danger);">Delete</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderCompare(sorted) {
+            const select = document.getElementById('compareSelect');
+            select.innerHTML = '<option>Select apartments to compare</option>' + sorted.map(apt => `<option value="${apt.id}">${apt.name}</option>`).join('');
+            select.addEventListener('change', () => {
+                const ids = Array.from(document.querySelectorAll('#compareSelect')).map(s => s.value).filter(v => v);
+                const compareApts = sorted.filter(apt => ids.includes(String(apt.id)));
+                const grid = document.getElementById('compareGrid');
+                if (compareApts.length === 0) { grid.innerHTML = ''; return; }
+                grid.innerHTML = compareApts.map((apt, idx) => `
+                    <div class="compare-card ${idx === 0 ? 'winner' : ''}">
+                        <h3>${apt.name}</h3>
+                        <div class="compare-row"><div><div class="compare-label">Score</div><div class="compare-value">${apt.score}</div></div><div><div class="compare-label">Monthly</div><div class="compare-value">$${calculateMonthlyCost(apt)}</div></div></div>
+                        <div class="compare-row"><div><div class="compare-label">Move-In</div><div class="compare-value">$${calculateMoveInCost(apt)}</div></div><div><div class="compare-label">Commute</div><div class="compare-value">${apt.commuteMyWork || 0}m</div></div></div>
+                        <div class="compare-row"><div><div class="compare-label">Safety</div><div class="compare-value">${apt.safety || 5}/10</div></div><div><div class="compare-label">Walkability</div><div class="compare-value">${apt.walkability || 5}/10</div></div></div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            Object.keys(data).forEach(key => {
+                if (['rent', 'promo', 'rentAfterPromo', 'utilities', 'parking', 'internet', 'valetTrash', 'pestControl', 'packageFee', 'petRent', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'].includes(key)) {
+                    data[key] = parseInt(data[key]) || 0;
+                }
+            });
+            if (app.editingId) {
+                const idx = app.apartments.findIndex(a => a.id === app.editingId);
+                app.apartments[idx] = { ...app.apartments[idx], ...data };
+                app.editingId = null;
+            } else {
+                data.id = Date.now();
+                app.apartments.push(data);
+            }
+            saveToStorage();
+            resetForm();
+            app.currentView = 'dashboard';
+            document.querySelectorAll('.nav-item')[0].click();
+        }
+
+        function resetForm() {
+            document.getElementById('apartmentForm').reset();
+            document.querySelectorAll('.rating-value span:nth-child(2)').forEach(el => el.textContent = '5');
+            app.editingId = null;
+        }
+
+        function editApartment(id) {
+            const apt = app.apartments.find(a => a.id === id);
+            if (!apt) return;
+            const form = document.getElementById('apartmentForm');
+            Object.keys(apt).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    input.value = apt[key];
+                    if (input.type === 'range') {
+                        const valElement = document.getElementById(key + 'Val');
+                        if (valElement) valElement.textContent = apt[key];
+                    }
+                }
+            });
+            app.editingId = id;
+            document.querySelectorAll('.nav-item')[4].click();
+            window.scrollTo(0, 0);
+        }
+
+        function deleteApartment(id) {
+            if (confirm('Delete this apartment?')) {
+                app.apartments = app.apartments.filter(a => a.id !== id);
+                saveToStorage();
+                render();
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('apartmentIQ_data', JSON.stringify(app.apartments));
+            localStorage.setItem('apartmentIQ_weights', JSON.stringify(app.weights));
+        }
+
+        function loadFromStorage() {
+            const data = localStorage.getItem('apartmentIQ_data');
+            const weights = localStorage.getItem('apartmentIQ_weights');
+            if (data) app.apartments = JSON.parse(data);
+            if (weights) app.weights = JSON.parse(weights);
+        }
+
+        function exportData() {
+            const data = { apartments: app.apartments, weights: app.weights, exportedAt: new Date().toISOString() };
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `apartment_backup_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.apartments) app.apartments = data.apartments;
+                    if (data.weights) app.weights = data.weights;
+                    saveToStorage();
+                    render();
+                    alert('Data imported successfully!');
+                } catch {
+                    alert('Failed to import file');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleDarkMode() {
+            document.body.style.filter = document.body.style.filter === 'invert(1)' ? 'none' : 'invert(1)';
+        }
+    </script>
+</body>
+</html>
