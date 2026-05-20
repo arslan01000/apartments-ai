@@ -1049,25 +1049,32 @@
                                 <input type="number" name="otherFees" value="0" min="0" placeholder="e.g., device activation, processing, etc.">
                             </div>
                         </div>
-                        <div style="margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--border);">
-                            <p style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">Pet Restrictions</p>
-                            <div class="checkbox-group">
-                                <div class="checkbox-item">
-                                    <input type="checkbox" id="petRestrictions" name="petRestrictions">
-                                    <label for="petRestrictions">Has Pet Restrictions/Weight Limits</label>
+
+                        <div style="margin: 1.5rem 0; padding: 1rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md);">
+                            <p style="font-size: 0.95rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary);">First Month Payment (Move-In Day)</p>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Move-In Date</label>
+                                    <input type="date" name="moveInDate" oninput="updateFirstMonthTotal()">
                                 </div>
-                                <div class="checkbox-item">
-                                    <input type="checkbox" id="limitedBreeds" name="limitedBreeds">
-                                    <label for="limitedBreeds">Breed Restrictions</label>
-                                </div>
-                                <div class="checkbox-item">
-                                    <input type="checkbox" id="petLimitPerUnit" name="petLimitPerUnit">
-                                    <label for="petLimitPerUnit">Limit on # of Pets</label>
+                                <div class="form-group">
+                                    <label>Lease Start Date (full rent begins)</label>
+                                    <input type="date" name="leaseStartDate" oninput="updateFirstMonthTotal()">
                                 </div>
                             </div>
-                            <div class="form-group" style="margin-top: 1rem;">
-                                <label>Pet Restrictions Details (if any)</label>
-                                <input type="text" name="petRestrictionsDetails" placeholder="e.g., Max 2 pets, no dogs over 50lbs, no aggressive breeds">
+                            <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--radius-md); border-left: 3px solid var(--primary);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                                    <span>All Fees & Deposits</span>
+                                    <span id="feesTotal" style="font-weight: 700; color: var(--primary);">$0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                                    <span>Prorated Rent (Move-In to Lease Start)</span>
+                                    <span id="proratedRent" style="font-weight: 700; color: var(--primary);">$0</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; color: var(--primary);">
+                                    <span>TOTAL DUE ON MOVE-IN DAY</span>
+                                    <span id="firstMonthTotal" style="font-size: 1.25rem;">$0</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1185,6 +1192,28 @@
                                 <label>Would I Regret NOT Choosing This? (1-10)</label>
                                 <input type="number" name="regretScore" min="1" max="10" value="5">
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>🐕 Pet Restrictions</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="petRestrictions" name="petRestrictions">
+                                <label for="petRestrictions">Has Pet Restrictions/Weight Limits</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="limitedBreeds" name="limitedBreeds">
+                                <label for="limitedBreeds">Breed Restrictions</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="petLimitPerUnit" name="petLimitPerUnit">
+                                <label for="petLimitPerUnit">Limit on # of Pets</label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label>Pet Restrictions Details (if any)</label>
+                            <input type="text" name="petRestrictionsDetails" placeholder="e.g., Max 2 pets, no dogs over 50lbs, no aggressive breeds">
                         </div>
                     </div>
 
@@ -1364,6 +1393,39 @@
             document.getElementById('exportBtn').addEventListener('click', exportData);
             document.getElementById('importBtn').addEventListener('change', importData);
             document.getElementById('darkModeBtn').addEventListener('click', toggleDarkMode);
+        }
+
+        function updateFirstMonthTotal() {
+            const form = document.getElementById('apartmentForm');
+            const appFee = parseInt(form.querySelector('[name="appFee"]')?.value) || 0;
+            const adminFee = parseInt(form.querySelector('[name="adminFee"]')?.value) || 0;
+            const deposit = parseInt(form.querySelector('[name="deposit"]')?.value) || 0;
+            const petDeposit = parseInt(form.querySelector('[name="petDeposit"]')?.value) || 0;
+            const petFee = parseInt(form.querySelector('[name="petFee"]')?.value) || 0;
+            const otherFees = parseInt(form.querySelector('[name="otherFees"]')?.value) || 0;
+            const rentAfterPromo = parseInt(form.querySelector('[name="rentAfterPromo"]')?.value) || 0;
+            
+            const moveInDate = form.querySelector('[name="moveInDate"]')?.value;
+            const leaseStartDate = form.querySelector('[name="leaseStartDate"]')?.value;
+            
+            const totalFees = appFee + adminFee + deposit + petDeposit + petFee + otherFees;
+            
+            let proratedRent = 0;
+            if (moveInDate && leaseStartDate) {
+                const moveIn = new Date(moveInDate);
+                const leaseStart = new Date(leaseStartDate);
+                const daysUntilLeaseStart = Math.ceil((leaseStart - moveIn) / (1000 * 60 * 60 * 24));
+                if (daysUntilLeaseStart > 0) {
+                    const dailyRent = rentAfterPromo / 30;
+                    proratedRent = Math.ceil(dailyRent * daysUntilLeaseStart);
+                }
+            }
+            
+            const firstMonthTotal = totalFees + proratedRent;
+            
+            document.getElementById('feesTotal').textContent = `$${totalFees}`;
+            document.getElementById('proratedRent').textContent = `$${proratedRent}`;
+            document.getElementById('firstMonthTotal').textContent = `$${firstMonthTotal}`;
         }
 
         function updateCostBreakdown() {
