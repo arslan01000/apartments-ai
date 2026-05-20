@@ -1524,7 +1524,7 @@
                         <div class="metric"><div class="metric-icon">🚗</div><div class="metric-content"><div class="metric-label">My Commute</div><div class="metric-value">${apt.commuteMyWork || 0}m</div></div></div>
                     </div>
                     ${apt.redFlags ? `<div class="red-flags"><strong>⚠️ Red Flags:</strong> ${apt.redFlags}</div>` : ''}
-                    <div class="apartment-actions"><button onclick="editApartment(${apt.id})">✏️ Edit</button><button onclick="deleteApartment(${apt.id})">🗑️ Delete</button></div>
+                    <div class="apartment-actions"><button onclick="viewApartmentDetails(${apt.id})">👁️ View Details</button><button onclick="editApartment(${apt.id})">✏️ Edit</button><button onclick="deleteApartment(${apt.id})">🗑️ Delete</button></div>
                 </div>
             `).join('');
         }
@@ -1588,8 +1588,20 @@
 
         function handleFormSubmit(e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
+            const form = document.getElementById('apartmentForm');
+            const formData = new FormData(form);
             const data = Object.fromEntries(formData);
+            
+            // Explicitly capture all text and textarea fields
+            const textFields = ['name', 'address', 'layout', 'website', 'pros', 'cons', 'redFlags', 'notes', 'smell', 'hallwayCondition', 'petRestrictionsDetails', 'dogGrooming', 'yoga'];
+            textFields.forEach(field => {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (input) {
+                    data[field] = input.value || '';
+                }
+            });
+            
+            // Convert numeric fields
             Object.keys(data).forEach(key => {
                 if (['sqft', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
@@ -1598,6 +1610,7 @@
                     data[key] = data[key] === 'on';
                 }
             });
+            
             if (app.editingId) {
                 const idx = app.apartments.findIndex(a => a.id === app.editingId);
                 app.apartments[idx] = { ...app.apartments[idx], ...data };
@@ -1619,7 +1632,70 @@
             updateCostBreakdown();
         }
 
-        function editApartment(id) {
+        function viewApartmentDetails(id) {
+            const apt = app.apartments.find(a => a.id === id);
+            if (!apt) return;
+            
+            const html = `
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; max-width: 800px; margin: 0 auto;">
+                    <h2 style="font-size: 2rem; margin-bottom: 2rem; color: var(--primary);">${apt.name}</h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div>
+                            <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.125rem;">📍 Location</h3>
+                            <p><strong>Address:</strong> ${apt.address || '-'}</p>
+                            <p><strong>Layout:</strong> ${apt.layout || '-'}</p>
+                            <p><strong>Sq Ft:</strong> ${apt.sqft || '-'}</p>
+                            <p><strong>Available:</strong> ${apt.availabilityDate || '-'}</p>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.125rem;">💰 Costs</h3>
+                            <p><strong>Rent After Promo:</strong> $${apt.rentAfterPromo}</p>
+                            <p><strong>Monthly Total:</strong> $${Math.round((apt.rentAfterPromo || 0) + (apt.utilities || 0) + (apt.parking || 0) + (apt.internet || 0) + (apt.electricity || 0) + (apt.water || 0) + (apt.gas || 0) + (apt.petRent || 0) + (apt.apartmentFees || 0))}</p>
+                            <p><strong>Move-In Est:</strong> $${Math.round((apt.appFee || 0) + (apt.adminFee || 0) + (apt.deposit || 0) + (apt.petDeposit || 0) + (apt.petFee || 0) + (apt.otherFees || 0))}</p>
+                            <p><strong>Score:</strong> <span style="color: var(--primary); font-weight: 700; font-size: 1.25rem;">${calculateScore(apt)}</span></p>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">⭐ Ratings</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.95rem;">
+                            <p><strong>Safety:</strong> ${apt.safety || 5}/10</p>
+                            <p><strong>Noise:</strong> ${apt.noise || 5}/10</p>
+                            <p><strong>Walkability:</strong> ${apt.walkability || 5}/10</p>
+                            <p><strong>Natural Light:</strong> ${apt.naturalLight || 5}/10</p>
+                            <p><strong>Kitchen:</strong> ${apt.kitchenQuality || 5}/10</p>
+                            <p><strong>Spaciousness:</strong> ${apt.spaciousness || 5}/10</p>
+                            <p><strong>Balcony:</strong> ${apt.balconyQuality || 5}/10</p>
+                            <p><strong>Study Area:</strong> ${apt.studyArea || 5}/10</p>
+                            <p><strong>Finish Quality:</strong> ${apt.finishQuality || 5}/10</p>
+                            <p><strong>Amenities:</strong> ${apt.amenities || 5}/10</p>
+                            <p><strong>Management:</strong> ${apt.management || 5}/10</p>
+                            <p><strong>Neighborhood:</strong> ${apt.neighborhood || 5}/10</p>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--text-primary); margin-bottom: 1rem;">🚗 Commute</h3>
+                        <p><strong>To My Work:</strong> ${apt.commuteMyWork || 0} min</p>
+                        <p><strong>To GF's Work:</strong> ${apt.commuteGFWork || 0} min</p>
+                    </div>
+
+                    ${apt.pros ? `<div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;"><h3 style="color: var(--success); margin-bottom: 0.75rem;">👍 Pros</h3><p>${apt.pros}</p></div>` : ''}
+                    ${apt.cons ? `<div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;"><h3 style="color: var(--warning); margin-bottom: 0.75rem;">👎 Cons</h3><p>${apt.cons}</p></div>` : ''}
+                    ${apt.redFlags ? `<div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;"><h3 style="color: var(--danger); margin-bottom: 0.75rem;">⚠️ Red Flags</h3><p>${apt.redFlags}</p></div>` : ''}
+                    ${apt.notes ? `<div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;"><h3 style="color: var(--text-primary); margin-bottom: 0.75rem;">📝 General Notes</h3><p>${apt.notes}</p></div>` : ''}
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; text-align: center;">
+                        <button class="btn btn-primary" onclick="editApartment(${apt.id})">✏️ Edit</button>
+                        <button class="btn" onclick="document.querySelectorAll('.nav-item')[0].click()" style="margin-left: 1rem;">← Back to Dashboard</button>
+                    </div>
+                </div>
+            `;
+            
+            const main = document.querySelector('main');
+            main.innerHTML = '<div class="view active">' + html + '</div>';
+        }
             const apt = app.apartments.find(a => a.id === id);
             if (!apt) return;
             const form = document.getElementById('apartmentForm');
