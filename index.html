@@ -1813,7 +1813,8 @@
                     <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
                         <h3 style="color: var(--text-primary); margin-bottom: 1rem;">💳 Monthly Cost Breakdown</h3>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.95rem;">
-                            <p><strong>Rent:</strong> $${apt.rentAfterPromo || 0}</p>
+                            <p><strong>Base Rent:</strong> $${apt.baseRent || 0}</p>
+                            <p><strong>Rent After Promo:</strong> $${apt.rentAfterPromo || 0}</p>
                             <p><strong>Electricity:</strong> $${apt.electricity || 0} ${apt.electricityIncluded ? '(Included)' : ''}</p>
                             <p><strong>Water:</strong> $${apt.water || 0} ${apt.waterIncluded ? '(Included)' : ''}</p>
                             <p><strong>Gas:</strong> $${apt.gas || 0} ${apt.gasIncluded ? '(Included)' : ''}</p>
@@ -1909,29 +1910,40 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.view')[4].classList.add('active');
             
-            // Wait a bit for form to be visible, then populate
+            // Wait for form to be fully rendered before populating
             setTimeout(() => {
                 const form = document.getElementById('apartmentForm');
                 if (!form) return;
                 
-                Object.keys(apt).forEach(key => {
-                    const input = form.querySelector(`[name="${key}"]`);
-                    if (input) {
-                        if (input.type === 'checkbox') {
-                            input.checked = apt[key];
-                        } else if (input.tagName === 'TEXTAREA') {
-                            input.value = apt[key] || '';
-                        } else {
-                            input.value = apt[key] || '';
-                            if (input.type === 'range') {
-                                const valElement = document.getElementById(key + 'Val');
-                                if (valElement) valElement.textContent = apt[key];
-                            }
-                        }
+                // Explicitly set base rent and rent after promo first
+                const baseRentField = form.querySelector('[name="baseRent"]');
+                const rentAfterPromoField = form.querySelector('[name="rentAfterPromo"]');
+                
+                if (baseRentField) baseRentField.value = apt.baseRent || 0;
+                if (rentAfterPromoField) rentAfterPromoField.value = apt.rentAfterPromo || 0;
+                
+                // Get all form fields and populate them
+                const allInputs = form.querySelectorAll('input, textarea, select');
+                
+                allInputs.forEach(input => {
+                    const key = input.name;
+                    const value = apt[key];
+                    
+                    if (input.type === 'checkbox') {
+                        input.checked = Boolean(value);
+                    } else if (input.tagName === 'TEXTAREA') {
+                        input.value = value || '';
+                    } else if (input.type === 'range') {
+                        input.value = value || 0;
+                        const valElement = document.getElementById(key + 'Val');
+                        if (valElement) valElement.textContent = value || 0;
+                    } else {
+                        input.value = value || '';
                     }
                 });
+                
                 updateCostBreakdown();
-            }, 100);
+            }, 300);
             
             window.scrollTo(0, 0);
         }
