@@ -1389,17 +1389,17 @@
         }
 
         function calculateMonthlyCost(apt) {
-            let total = apt.rentAfterPromo || 0;
+            let total = (apt.rentAfterPromo || 0);
             
-            if (!apt.electricityIncluded) total += apt.electricity || 0;
-            if (!apt.waterIncluded) total += apt.water || 0;
-            if (!apt.gasIncluded) total += apt.gas || 0;
-            if (!apt.internetIncluded) total += apt.internet || 0;
-            if (!apt.parkingIncluded) total += apt.parking || 0;
+            if (!apt.electricityIncluded) total += (apt.electricity || 0);
+            if (!apt.waterIncluded) total += (apt.water || 0);
+            if (!apt.gasIncluded) total += (apt.gas || 0);
+            if (!apt.internetIncluded) total += (apt.internet || 0);
+            if (!apt.parkingIncluded) total += (apt.parking || 0);
             
             total += (apt.petRent || 0) + (apt.apartmentFees || 0);
             
-            return total;
+            return Math.round(total);
         }
 
         function calculateMoveInCost(apt) {
@@ -1596,7 +1596,19 @@
         function loadFromStorage() {
             const data = localStorage.getItem('apartmentIQ_data');
             const weights = localStorage.getItem('apartmentIQ_weights');
-            if (data) app.apartments = JSON.parse(data);
+            if (data) {
+                app.apartments = JSON.parse(data);
+                // Convert all numeric fields from strings to numbers
+                app.apartments = app.apartments.map(apt => {
+                    const numericFields = ['baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore'];
+                    numericFields.forEach(field => {
+                        if (apt[field] !== undefined) {
+                            apt[field] = parseInt(apt[field]) || 0;
+                        }
+                    });
+                    return apt;
+                });
+            }
             if (weights) app.weights = JSON.parse(weights);
         }
 
