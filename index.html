@@ -1277,7 +1277,7 @@
                     </div>
 
                     <div class="form-section">
-                        <h3>📄 Approval / Income Documents</h3>
+                        <h3>✅ Approval Details</h3>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Accepts Bank Statements?</label>
@@ -1698,18 +1698,24 @@
             const form = document.getElementById('apartmentForm');
             const data = {};
 
-            // Capture EVERY form field, including textareas and selects.
-            // This fixes Pros, Cons, Red Flags, and General Notes disappearing on edit.
-            form.querySelectorAll('input, textarea, select').forEach(input => {
-                if (!input.name) return;
+            // Capture every form control inside the form, including unchecked checkboxes.
+            // This prevents old values from staying behind during edit mode.
+            form.querySelectorAll('input[name], textarea[name], select[name]').forEach(input => {
+                const key = input.name;
 
                 if (input.type === 'checkbox') {
-                    data[input.name] = input.checked;
+                    data[key] = input.checked;
                 } else if (input.type === 'number' || input.type === 'range') {
-                    data[input.name] = parseInt(input.value) || 0;
+                    data[key] = input.value === '' ? 0 : Number(input.value);
                 } else {
-                    data[input.name] = input.value || '';
+                    data[key] = input.value || '';
                 }
+            });
+
+            // Extra safety for the fields that were disappearing before.
+            ['pros', 'cons', 'redFlags', 'notes'].forEach(field => {
+                const input = form.querySelector(`[name="${field}"]`);
+                data[field] = input ? input.value : '';
             });
             
             if (app.editingId) {
@@ -1729,10 +1735,16 @@
         }
 
         function resetForm() {
-            document.getElementById('apartmentForm').reset();
-            document.querySelectorAll('.rating-value span:nth-child(2)').forEach(el => el.textContent = '5');
+            const form = document.getElementById('apartmentForm');
+            if (!form) return;
+            form.reset();
+            document.querySelectorAll('.rating-slider').forEach(slider => {
+                const valElement = document.getElementById(slider.name + 'Val');
+                if (valElement) valElement.textContent = slider.value;
+            });
             app.editingId = null;
             updateCostBreakdown();
+            updateFirstMonthTotal();
         }
 
         function viewApartmentDetails(id) {
@@ -1838,9 +1850,9 @@
 
                     <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
                         <h3 style="color: var(--text-primary); margin-bottom: 1rem;">✅ Approval Details</h3>
-                        <p><strong>Accepts Bank Statements:</strong> ${apt.acceptsBankStatements ? '✅ Yes' : '❌ No'}</p>
-                        <p><strong>Accepts Scholarship Docs:</strong> ${apt.acceptsScholarshipDocs ? '✅ Yes' : '❌ No'}</p>
-                        <p><strong>Requires Paystubs:</strong> ${apt.requiresPaystubs ? '⚠️ Yes' : '✅ No'}</p>
+                        <p><strong>Accepts Bank Statements:</strong> ${apt.acceptsBankStatements || 'Unknown'}</p>
+                        <p><strong>Accepts Scholarship Docs:</strong> ${apt.acceptsScholarship || 'Unknown'}</p>
+                        <p><strong>Requires Paystubs:</strong> ${apt.requiresPaystubs || 'Unknown'}</p>
                         ${apt.approvalDifficulty ? `<p><strong>Approval Difficulty:</strong> ${apt.approvalDifficulty}</p>` : ''}
                         ${apt.approvalStatus ? `<p><strong>Status:</strong> ${apt.approvalStatus}</p>` : ''}
                     </div>
@@ -1886,14 +1898,22 @@
                 </div>
             `;
             
-            const main = document.querySelector('main');
-            main.innerHTML = `<div style="padding: 2rem;">${detailsHtml}</div>`;
+            const summaryGrid = document.getElementById('summaryGrid');
+            const apartmentsList = document.getElementById('apartmentsList');
+            if (summaryGrid) summaryGrid.innerHTML = '';
+            if (apartmentsList) apartmentsList.innerHTML = `<div style="padding: 2rem;">${detailsHtml}</div>`;
+            app.currentView = 'dashboard';
+            showView('dashboard');
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelector('.nav-item[data-view="dashboard"]').classList.add('active');
+            window.scrollTo(0, 0);
         }
         
         function showDashboard() {
             app.currentView = 'dashboard';
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            document.querySelector('.nav-item[data-view="dashboard"]').classList.add('active');
+            showView('dashboard');
             render();
         }
 
@@ -1903,47 +1923,39 @@
             app.editingId = id;
             app.currentView = 'add';
             
-            // Switch to Add Apartment view
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.nav-item')[4].classList.add('active');
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.view')[4].classList.add('active');
+            document.querySelector('.nav-item[data-view="add"]').classList.add('active');
+            showView('add');
             
-            // Wait for form to be fully rendered before populating
-            setTimeout(() => {
-                const form = document.getElementById('apartmentForm');
-                if (!form) return;
-                
-                // Explicitly set base rent and rent after promo first
-                const baseRentField = form.querySelector('[name="baseRent"]');
-                const rentAfterPromoField = form.querySelector('[name="rentAfterPromo"]');
-                
-                if (baseRentField) baseRentField.value = apt.baseRent || 0;
-                if (rentAfterPromoField) rentAfterPromoField.value = apt.rentAfterPromo || 0;
-                
-                // Get all form fields and populate them
-                const allInputs = form.querySelectorAll('input, textarea, select');
-                
-                allInputs.forEach(input => {
-                    const key = input.name;
-                    const value = apt[key];
-                    
-                    if (input.type === 'checkbox') {
-                        input.checked = Boolean(value);
-                    } else if (input.tagName === 'TEXTAREA') {
-                        input.value = value || '';
-                    } else if (input.type === 'range') {
-                        input.value = value || 0;
-                        const valElement = document.getElementById(key + 'Val');
-                        if (valElement) valElement.textContent = value || 0;
-                    } else {
-                        input.value = value || '';
-                    }
-                });
-                
-                updateCostBreakdown();
-            }, 300);
+            const form = document.getElementById('apartmentForm');
+            if (!form) {
+                alert('Edit form could not be found. Refresh the page and try again.');
+                return;
+            }
+
+            form.querySelectorAll('input[name], textarea[name], select[name]').forEach(input => {
+                const key = input.name;
+                const value = apt[key];
+
+                if (input.type === 'checkbox') {
+                    input.checked = Boolean(value);
+                } else if (input.type === 'range') {
+                    input.value = value ?? input.defaultValue ?? 0;
+                    const valElement = document.getElementById(key + 'Val');
+                    if (valElement) valElement.textContent = input.value;
+                } else {
+                    input.value = value ?? '';
+                }
+            });
+
+            // Explicitly restore these fields because they were the ones disappearing.
+            ['pros', 'cons', 'redFlags', 'notes'].forEach(field => {
+                const input = form.querySelector(`[name="${field}"]`);
+                if (input) input.value = apt[field] ?? '';
+            });
             
+            updateCostBreakdown();
+            updateFirstMonthTotal();
             window.scrollTo(0, 0);
         }
 
@@ -1986,7 +1998,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `apartment_backup_${Date.now()}.json`;
+            a.download = `apartment_backup_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
