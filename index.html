@@ -878,10 +878,6 @@
             <div class="compare-grid" id="compareGrid"></div>
         </div>
 
-        <div class="view" id="details">
-            <div id="detailsContent"></div>
-        </div>
-
         <div class="view" id="add">
             <div class="form-container">
                 <form id="apartmentForm">
@@ -1279,6 +1275,9 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="form-section">
+                        <h3>📄 Approval / Income Documents</h3>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Accepts Bank Statements?</label>
@@ -1697,49 +1696,27 @@
         function handleFormSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('apartmentForm');
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
-            // Text, textarea, select, and date fields
-            const textFields = [
-                'name', 'address', 'layout', 'website', 'availabilityDate', 'moveInDate', 'leaseStartDate',
-                'pros', 'cons', 'redFlags', 'notes', 'smell', 'hallwayCondition',
-                'petRestrictionsDetails', 'dogGrooming', 'yoga',
-                'acceptsBankStatements', 'acceptsScholarship', 'requiresPaystubs', 'approvalDifficulty', 'approvalStatus'
-            ];
-            textFields.forEach(field => {
-                const input = form.querySelector(`[name="${field}"]`);
-                if (input) data[field] = input.value || '';
-            });
-            
-            // Numeric fields
-            const numericFields = [
-                'sqft', 'leaseLength', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas',
-                'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees',
-                'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork',
-                'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness',
-                'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood',
-                'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'
-            ];
-            numericFields.forEach(field => {
-                const input = form.querySelector(`[name="${field}"]`);
-                data[field] = input ? (parseInt(input.value) || 0) : 0;
-            });
+            const data = {};
 
-            // Checkbox fields must be saved explicitly because unchecked boxes are missing from FormData
-            const checkboxFields = [
-                'electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded',
-                'petRestrictions', 'limitedBreeds', 'petLimitPerUnit',
-                'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'
-            ];
-            checkboxFields.forEach(field => {
-                const input = form.querySelector(`[name="${field}"]`);
-                data[field] = input ? input.checked : false;
+            // Capture EVERY form field, including textareas and selects.
+            // This fixes Pros, Cons, Red Flags, and General Notes disappearing on edit.
+            form.querySelectorAll('input, textarea, select').forEach(input => {
+                if (!input.name) return;
+
+                if (input.type === 'checkbox') {
+                    data[input.name] = input.checked;
+                } else if (input.type === 'number' || input.type === 'range') {
+                    data[input.name] = parseInt(input.value) || 0;
+                } else {
+                    data[input.name] = input.value || '';
+                }
             });
             
             if (app.editingId) {
                 const idx = app.apartments.findIndex(a => a.id === app.editingId);
-                if (idx !== -1) app.apartments[idx] = { ...app.apartments[idx], ...data, id: app.editingId };
+                if (idx !== -1) {
+                    app.apartments[idx] = { ...app.apartments[idx], ...data, id: app.editingId };
+                }
                 app.editingId = null;
             } else {
                 data.id = Date.now();
@@ -1861,9 +1838,9 @@
 
                     <div style="border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 1.5rem;">
                         <h3 style="color: var(--text-primary); margin-bottom: 1rem;">✅ Approval Details</h3>
-                        <p><strong>Accepts Bank Statements:</strong> ${apt.acceptsBankStatements === 'yes' ? '✅ Yes' : apt.acceptsBankStatements === 'no' ? '❌ No' : 'Unknown'}</p>
-                        <p><strong>Accepts Scholarship Docs:</strong> ${apt.acceptsScholarship === 'yes' ? '✅ Yes' : apt.acceptsScholarship === 'no' ? '❌ No' : 'Unknown'}</p>
-                        <p><strong>Requires Paystubs:</strong> ${apt.requiresPaystubs === 'yes' ? '⚠️ Yes' : apt.requiresPaystubs === 'no' ? '✅ No' : 'Unknown'}</p>
+                        <p><strong>Accepts Bank Statements:</strong> ${apt.acceptsBankStatements ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Accepts Scholarship Docs:</strong> ${apt.acceptsScholarshipDocs ? '✅ Yes' : '❌ No'}</p>
+                        <p><strong>Requires Paystubs:</strong> ${apt.requiresPaystubs ? '⚠️ Yes' : '✅ No'}</p>
                         ${apt.approvalDifficulty ? `<p><strong>Approval Difficulty:</strong> ${apt.approvalDifficulty}</p>` : ''}
                         ${apt.approvalStatus ? `<p><strong>Status:</strong> ${apt.approvalStatus}</p>` : ''}
                     </div>
@@ -1909,18 +1886,15 @@
                 </div>
             `;
             
-            const detailsContent = document.getElementById('detailsContent');
-            if (detailsContent) {
-                detailsContent.innerHTML = `<div style="padding: 2rem;">${detailsHtml}</div>`;
-            }
-            app.currentView = 'details';
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            showView('details');
-            window.scrollTo(0, 0);
+            const main = document.querySelector('main');
+            main.innerHTML = `<div style="padding: 2rem;">${detailsHtml}</div>`;
         }
         
         function showDashboard() {
-            document.querySelectorAll('.nav-item')[0].click();
+            app.currentView = 'dashboard';
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            render();
         }
 
         function editApartment(id) {
@@ -1929,35 +1903,46 @@
             app.editingId = id;
             app.currentView = 'add';
             
-            // Switch to Add Apartment view without relying on fragile view indexes
+            // Switch to Add Apartment view
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            const addNav = document.querySelector('.nav-item[data-view="add"]');
-            if (addNav) addNav.classList.add('active');
-            showView('add');
+            document.querySelectorAll('.nav-item')[4].classList.add('active');
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.view')[4].classList.add('active');
             
+            // Wait for form to be fully rendered before populating
             setTimeout(() => {
                 const form = document.getElementById('apartmentForm');
                 if (!form) return;
                 
+                // Explicitly set base rent and rent after promo first
+                const baseRentField = form.querySelector('[name="baseRent"]');
+                const rentAfterPromoField = form.querySelector('[name="rentAfterPromo"]');
+                
+                if (baseRentField) baseRentField.value = apt.baseRent || 0;
+                if (rentAfterPromoField) rentAfterPromoField.value = apt.rentAfterPromo || 0;
+                
+                // Get all form fields and populate them
                 const allInputs = form.querySelectorAll('input, textarea, select');
+                
                 allInputs.forEach(input => {
                     const key = input.name;
                     const value = apt[key];
                     
                     if (input.type === 'checkbox') {
                         input.checked = Boolean(value);
+                    } else if (input.tagName === 'TEXTAREA') {
+                        input.value = value || '';
                     } else if (input.type === 'range') {
-                        input.value = value ?? input.value;
+                        input.value = value || 0;
                         const valElement = document.getElementById(key + 'Val');
-                        if (valElement) valElement.textContent = input.value;
+                        if (valElement) valElement.textContent = value || 0;
                     } else {
-                        input.value = value ?? '';
+                        input.value = value || '';
                     }
                 });
                 
                 updateCostBreakdown();
-                updateFirstMonthTotal();
-            }, 0);
+            }, 300);
             
             window.scrollTo(0, 0);
         }
