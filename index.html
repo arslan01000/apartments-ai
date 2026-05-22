@@ -1370,6 +1370,14 @@
             setupEventListeners();
             updateCostBreakdown();
             render();
+
+            // If "Edit" was clicked from the details page, the page reloads
+            // and then re-opens the correct apartment in edit mode.
+            const pendingEditId = sessionStorage.getItem('apartmentIQ_pendingEditId');
+            if (pendingEditId) {
+                sessionStorage.removeItem('apartmentIQ_pendingEditId');
+                setTimeout(() => editApartment(Number(pendingEditId)), 0);
+            }
         });
 
         function setupEventListeners() {
@@ -1705,13 +1713,19 @@
                 }
             });
             
+            // Make unchecked checkboxes save as false instead of keeping old true values while editing
+            const checkboxFields = ['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit', 'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'];
+            checkboxFields.forEach(field => {
+                data[field] = form.querySelector(`[name="${field}"]`)?.checked || false;
+            });
+
             // Convert numeric fields
             Object.keys(data).forEach(key => {
-                if (['sqft', 'leaseLength', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
+                if (['sqft', 'leaseLength', 'baseRent', 'rentAfterPromo', 'electricity', 'water', 'gas', 'internet', 'parking', 'petRent', 'petDeposit', 'petFee', 'apartmentFees', 'appFee', 'adminFee', 'deposit', 'otherFees', 'commuteMyWork', 'commuteGFWork', 'safety', 'noise', 'walkability', 'naturalLight', 'kitchenQuality', 'spaciousness', 'balconyQuality', 'studyArea', 'finishQuality', 'amenities', 'management', 'neighborhood', 'cleanliness', 'overallVibe', 'enjoyScore', 'regretScore', 'gym'].includes(key)) {
                     data[key] = parseInt(data[key]) || 0;
                 }
-                if (['electricityIncluded', 'waterIncluded', 'gasIncluded', 'internetIncluded', 'parkingIncluded', 'petRestrictions', 'limitedBreeds', 'petLimitPerUnit', 'concierge', 'dogPark', 'pool', 'coffeeShop', 'skylounge'].includes(key)) {
-                    data[key] = data[key] === 'on';
+                if (checkboxFields.includes(key)) {
+                    data[key] = Boolean(data[key]);
                 }
             });
             
